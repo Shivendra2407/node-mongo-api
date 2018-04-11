@@ -1,13 +1,17 @@
 const expect = require('expect');
 const request = require('supertest');
 
+const {ObjectID} = require('mongodb');
+
 const {app} = require('./../server');
 const {Todo} = require('./../models/todo');
 
 const todos = [{
+  _id : new ObjectID(),
   text: "First todo"
 },
 {
+  _id : new ObjectID(),
   text:"Second todo"
 }];
 // before Each runs before each test case(each 'it' block)
@@ -77,4 +81,34 @@ describe('GET /todos',()=>{
     .end(done);
 
   });
+});
+
+
+describe('GET /todos/:id',()=>{
+
+it('should get id based todos',(done)=>{
+request(app)
+.get(`/todos/${todos[0]._id.toHexString()}`)
+.expect(200)
+.expect((res)=>{
+expect(res.body.todo.text).toBe(todos[0].text)
+})
+.end(done);
+});
+
+it('should return 404 for todo not found',(done)=>{
+  var id = new ObjectID();
+  request(app)
+  .get(`/todos/${id.toHexString()}`)
+  .expect(404)
+  .end(done);
+});
+
+it('should return 400 for invalid id',(done)=>{
+
+  request(app)
+  .get('/todos/123abc')
+  .expect(400)
+  .end(done);
+});
 });
